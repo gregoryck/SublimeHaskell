@@ -28,6 +28,8 @@ def show_hdevtools_error_and_disable():
 
     set_setting_async('enable_hdevtools', False)
 
+def hdevtools_binary():
+    return '/home/gkettler/haskell/biocalc/.cabal-sandbox/bin/'
 
 def call_hdevtools_and_wait(arg_list, filename = None, cabal = None):
     """
@@ -45,7 +47,7 @@ def call_hdevtools_and_wait(arg_list, filename = None, cabal = None):
         arg_list.append('--socket={0}'.format(hdevtools_socket))
 
     try:
-        exit_code, out, err = call_and_wait(['hdevtools'] + arg_list + ghc_opts_args, cwd = source_dir)
+        exit_code, out, err = call_and_wait([hdevtools_binary()] + arg_list + ghc_opts_args, cwd = source_dir)
 
         if exit_code != 0:
             raise Exception("hdevtools exited with status %d and stderr: %s" % (exit_code, err))
@@ -71,7 +73,7 @@ def admin(cmds, wait = False, **popen_kwargs):
     if hdevtools_socket:
         cmds.append('--socket={0}'.format(hdevtools_socket))
 
-    command = ["hdevtools", "admin"] + cmds
+    command = [hdevtools_binary(), "admin"] + cmds
 
     try:
         if wait:
