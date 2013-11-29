@@ -903,6 +903,7 @@ class InspectorAgent(threading.Thread):
             if exit_code != 0:
                 s.fail()
                 error_msg = u"SublimeHaskell: Failed to compile CabalInspector\n{0}".format(err)
+                error_msg += " ".join((CABAL_INSPECTOR_SOURCE_PATH, CABAL_INSPECTOR_EXE_PATH, CABAL_INSPECTOR_OBJ_DIR))
                 wait_for_window(lambda w: self.show_errors(w, error_msg))
                 # Continue anyway
 
@@ -918,6 +919,7 @@ class InspectorAgent(threading.Thread):
             if exit_code != 0:
                 s.fail()
                 error_msg = u"SublimeHaskell: Failed to compile ModuleInspector\n{0}".format(err)
+                error_msg += " ".join((MODULE_INSPECTOR_SOURCE_PATH, MODULE_INSPECTOR_EXE_PATH, MODULE_INSPECTOR_OBJ_DIR))
                 wait_for_window(lambda w: self.show_errors(w, error_msg))
                 return
 

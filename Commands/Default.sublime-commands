@@ -62,8 +62,8 @@
         "command": "sublime_haskell_run"
     },
     {
-        "caption": "SublimeHaskell: Check",
-        "command": "sublime_haskell_ghc_mod_check"
+        "caption": "SublimeHaskell: Check With Hdevtools",
+        "command": "sublime_haskell_hdevtools_check"
     },
     {
         "caption": "SublimeHaskell: Lint",

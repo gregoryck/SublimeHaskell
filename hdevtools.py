@@ -8,11 +8,13 @@ import threading
 if int(sublime.version()) < 3000:
     from sublime_haskell_common import *
     from ghci import parse_info
+    from parseoutput import parse_output_messages, show_output_result_text, format_output_messages, mark_messages_in_views, hide_output, set_global_error_messages
     import symbols
 else:
     from SublimeHaskell.sublime_haskell_common import *
     from SublimeHaskell.ghci import parse_info
     import SublimeHaskell.symbols as symbols
+    from SublimeHaskell.parseoutput import parse_output_messages, show_output_result_text, format_output_messages, mark_messages_in_views, hide_output, set_global_error_messages
 
 
 def show_hdevtools_error_and_disable():
@@ -29,7 +31,7 @@ def show_hdevtools_error_and_disable():
     set_setting_async('enable_hdevtools', False)
 
 def hdevtools_binary():
-    return '/home/gkettler/haskell/biocalc/.cabal-sandbox/bin/'
+    return '/Users/gkettler/haskell/biocalc/.cabal-sandbox/bin/hdevtools'
 
 def call_hdevtools_and_wait(arg_list, filename = None, cabal = None):
     """
@@ -37,6 +39,7 @@ def call_hdevtools_and_wait(arg_list, filename = None, cabal = None):
     Shows a sublime error message if hdevtools is not available.
     """
     if not hdevtools_enabled():
+        log("hdevtools disabled - 1")
         return None
 
     ghc_opts_args = get_ghc_opts_args(filename, cabal = cabal)
@@ -49,10 +52,12 @@ def call_hdevtools_and_wait(arg_list, filename = None, cabal = None):
     try:
         exit_code, out, err = call_and_wait([hdevtools_binary()] + arg_list + ghc_opts_args, cwd = source_dir)
 
-        if exit_code != 0:
+        log(out)
+
+        if err:
             raise Exception("hdevtools exited with status %d and stderr: %s" % (exit_code, err))
 
-        return crlf2lf(out)
+        return parse_output_messages(source_dir, out)
 
     except OSError as e:
         if e.errno == errno.ENOENT:
@@ -136,3 +141,23 @@ def stop_hdevtools():
 
 def hdevtools_enabled():
     return get_setting_async('enable_hdevtools') == True
+
+class SublimeHaskellHdevtoolsCheck(sublime_plugin.WindowCommand):
+    def run(self):
+        window, view, file_shown_in_view = get_haskell_command_window_view_file_project()
+        if not file_shown_in_view:
+            return
+
+        file_dir, file_name = os.path.split(file_shown_in_view)
+        log('hdevtools checking ' + file_shown_in_view)
+        parsed_output = hdevtools_check(file_shown_in_view)
+        set_global_error_messages(parsed_output)
+        sublime.set_timeout(lambda: mark_messages_in_views(parsed_output), 0)
+        output_text = repr(parsed_output[0].message)
+        exit_code = 1 if parsed_output else 0
+        show_output_result_text(view, '', output_text, exit_code, file_dir)
+
+
+
+    def is_enabled(self):
+        return is_haskell_source(None)
