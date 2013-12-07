@@ -30,10 +30,19 @@ def show_hdevtools_error_and_disable():
 
     set_setting_async('enable_hdevtools', False)
 
-def hdevtools_binary():
-    return '/Users/gkettler/haskell/biocalc/.cabal-sandbox/bin/hdevtools'
+def hdevtools_binary(view):
+    cabal_project_dir, cabal_project_name = get_cabal_project_dir_and_name_of_view(view)
+    putative_hdevtools = os.path.join(cabal_project_dir, ".cabal-sandbox/bin/hdevtools")
+    if os.path.exists(putative_hdevtools):
+        log("returning " + putative_hdevtools)
+        return putative_hdevtools
+    else:
+        log("returning just hdevtools")
+        return "hdevtools"
 
-def call_hdevtools_and_wait(arg_list, filename = None, cabal = None):
+    # return '/Users/gkettler/haskell/biocalc/.cabal-sandbox/bin/hdevtools'
+
+def call_hdevtools_and_wait(view, arg_list, filename = None, cabal = None):
     """
     Calls hdevtools with the given arguments.
     Shows a sublime error message if hdevtools is not available.
@@ -45,18 +54,23 @@ def call_hdevtools_and_wait(arg_list, filename = None, cabal = None):
     ghc_opts_args = get_ghc_opts_args(filename, cabal = cabal)
     hdevtools_socket = get_setting_async('hdevtools_socket')
     source_dir = get_source_dir(filename)
-
+    print hdevtools_socket
     if hdevtools_socket:
         arg_list.append('--socket={0}'.format(hdevtools_socket))
 
     try:
-        exit_code, out, err = call_and_wait([hdevtools_binary()] + arg_list + ghc_opts_args, cwd = source_dir)
+        exit_code, out, err = call_and_wait([hdevtools_binary(view)] + arg_list + ghc_opts_args, cwd = source_dir)
 
         log(out)
 
         if err:
             raise Exception("hdevtools exited with status %d and stderr: %s" % (exit_code, err))
 
+        print source_dir
+        print out
+        print err
+        import pdb
+        pdb.set_trace()
         return parse_output_messages(source_dir, out)
 
     except OSError as e:
@@ -78,7 +92,7 @@ def admin(cmds, wait = False, **popen_kwargs):
     if hdevtools_socket:
         cmds.append('--socket={0}'.format(hdevtools_socket))
 
-    command = [hdevtools_binary(), "admin"] + cmds
+    command = [hdevtools_binary(view), "admin"] + cmds
 
     try:
         if wait:
@@ -119,11 +133,11 @@ def hdevtools_info(filename, symbol_name, cabal = None):
     contents = call_hdevtools_and_wait(['info', filename, symbol_name], filename = filename, cabal = cabal)
     return parse_info(symbol_name, contents) if contents else None
 
-def hdevtools_check(filename, cabal = None):
+def hdevtools_check(view, filename, cabal = None):
     """
     Uses hdevtools to check file
     """
-    return call_hdevtools_and_wait(['check', filename], filename = filename, cabal = cabal)
+    return call_hdevtools_and_wait(view, ['check', filename], filename = filename, cabal = cabal)
 
 def hdevtools_type(filename, line, column, cabal = None):
     """
@@ -150,7 +164,8 @@ class SublimeHaskellHdevtoolsCheck(sublime_plugin.WindowCommand):
 
         file_dir, file_name = os.path.split(file_shown_in_view)
         log('hdevtools checking ' + file_shown_in_view)
-        parsed_output = hdevtools_check(file_shown_in_view)
+        parsed_output = hdevtools_check(view, file_shown_in_view)
+        log(parsed_output)
         set_global_error_messages(parsed_output)
         sublime.set_timeout(lambda: mark_messages_in_views(parsed_output), 0)
         output_text = repr(parsed_output[0].message)
