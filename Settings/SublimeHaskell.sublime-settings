@@ -4,6 +4,12 @@
 	// See the add_to_PATH settings to specify a custom location.
 	"enable_ghc_mod": false,
 
+	// Enables hdevtools (it must be installed, cabal install hdevtools)
+	// Will look for the binary installed in your cabal sandbox
+	// Or see the add_to_PATH settings to specify a custom location.
+	// Requires enable_ghc_mod: false
+	"enable_hdevtools": false,
+
 	// Enable auto completion of module imports
 	"auto_complete_imports": true,
 
@@ -74,10 +80,6 @@
 	// Additional ghc options for use in ghc-mod and ModuleInspector, for example "-package ghc"
 	"ghc_opts": [],
 
-	// Enables hdevtools (it must be installed, cabal install hdevtools)
-	// See the add_to_PATH settings to specify a custom location.
-	"enable_hdevtools": true,
-
 	// hdevtools socket name or default
 	"hdevtools_socket": "",
 
@@ -89,7 +91,7 @@
 	// Needed for autocompletion.
 	// This can take a lot of time in really big Haskell projects.
 	// Changing this requires a Sublime restart.
-	"inspect_modules": false,
+	"inspect_modules": true,
 
 	// Relative or absolute path to a folder where local caches are stored.
 	// The same folder is used to store the CabalInspector/ModuleInspector tools.

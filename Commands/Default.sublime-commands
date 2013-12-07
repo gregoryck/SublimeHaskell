@@ -62,6 +62,10 @@
         "command": "sublime_haskell_run"
     },
     {
+        "caption": "SublimeHaskell: Check With ghcmod",
+        "command": "sublime_haskell_ghc_mod_check"
+    },
+    {
         "caption": "SublimeHaskell: Check With Hdevtools",
         "command": "sublime_haskell_hdevtools_check"
     },

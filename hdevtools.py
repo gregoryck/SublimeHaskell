@@ -31,7 +31,8 @@ def show_hdevtools_error_and_disable():
     set_setting_async('enable_hdevtools', False)
 
 def hdevtools_binary():
-    return '/Users/gkettler/haskell/biocalc/.cabal-sandbox/bin/hdevtools'
+    # FIXME
+    return '/home/gkettler/haskell/biocalc/.cabal-sandbox/bin/hdevtools'
 
 def call_hdevtools_and_wait(arg_list, filename = None, cabal = None):
     """
@@ -39,7 +40,7 @@ def call_hdevtools_and_wait(arg_list, filename = None, cabal = None):
     Shows a sublime error message if hdevtools is not available.
     """
     if not hdevtools_enabled():
-        log("hdevtools disabled - 1")
+        log("call_hdevtools_and_wait: hdevtools disabled")
         return None
 
     ghc_opts_args = get_ghc_opts_args(filename, cabal = cabal)
@@ -51,8 +52,6 @@ def call_hdevtools_and_wait(arg_list, filename = None, cabal = None):
 
     try:
         exit_code, out, err = call_and_wait([hdevtools_binary()] + arg_list + ghc_opts_args, cwd = source_dir)
-
-        log(out)
 
         if err:
             raise Exception("hdevtools exited with status %d and stderr: %s" % (exit_code, err))
