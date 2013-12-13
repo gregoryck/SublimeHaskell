@@ -193,8 +193,7 @@ def get_cabal_in_dir(cabal_dir):
             return (project_name, os.path.join(cabal_dir, entry))
     return (None, None)
 
-
-def find_file_in_parent_dir(subdirectory, filename_pattern):
+def find_file_in_parent_dir(subdirectory, filename_pattern, filter=os.path.isfile):
     """Look for a file with the specified name in a parent directory of the
     specified directory. If found, return the file's full path. Otherwise,
     return None."""
@@ -204,8 +203,9 @@ def find_file_in_parent_dir(subdirectory, filename_pattern):
         for name in os.listdir(current_dir):
             full_path = os.path.join(current_dir, name)
             matches_pattern = fnmatch.fnmatch(name, filename_pattern)
-            if matches_pattern and os.path.isfile(full_path):
+            if matches_pattern and filter(full_path):
                 return full_path
+
         # Get the next directory up:
         last_dir = current_dir
         current_dir = os.path.dirname(current_dir)

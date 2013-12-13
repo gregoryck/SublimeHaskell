@@ -31,8 +31,17 @@ def show_hdevtools_error_and_disable():
     set_setting_async('enable_hdevtools', False)
 
 def hdevtools_binary():
-    # FIXME
-    return '/home/gkettler/haskell/biocalc/.cabal-sandbox/bin/hdevtools'
+    # current_project_dir, current_project_name = get_cabal_project_dir_and_name_of_view(self.window.active_view())
+    window, view, file_shown_in_view = get_haskell_command_window_view_file_project()
+    sandbox_path = find_file_in_parent_dir(os.path.dirname(file_shown_in_view), '.cabal-sandbox', filter=os.path.isdir)
+
+    if (sandbox_path is not None):
+        putative_binary = os.path.join(sandbox_path, 'bin/hdevtools') 
+        if os.path.exists(putative_binary):
+            # log("using " + putative_binary)
+            return putative_binary
+
+    return 'hdevtools'
 
 def call_hdevtools_and_wait(arg_list, filename = None, cabal = None):
     """
@@ -58,11 +67,11 @@ def call_hdevtools_and_wait(arg_list, filename = None, cabal = None):
 
         return parse_output_messages(source_dir, out)
 
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            show_hdevtools_error_and_disable()
+    # except OSError as e:
+    #     if e.errno == errno.ENOENT:
+    #         show_hdevtools_error_and_disable()
 
-        return None
+    #     return None
 
     except Exception as e:
         log('calling to hdevtools fails with {0}'.format(e))
@@ -150,6 +159,8 @@ class SublimeHaskellHdevtoolsCheck(sublime_plugin.WindowCommand):
         file_dir, file_name = os.path.split(file_shown_in_view)
         log('hdevtools checking ' + file_shown_in_view)
         parsed_output = hdevtools_check(file_shown_in_view)
+        if parsed_output is None:
+            raise ValueError, "hdevtools failed!"
         set_global_error_messages(parsed_output)
         sublime.set_timeout(lambda: mark_messages_in_views(parsed_output), 0)
         output_text = repr(parsed_output[0].message)
