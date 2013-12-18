@@ -161,9 +161,10 @@ class SublimeHaskellHdevtoolsCheck(sublime_plugin.WindowCommand):
         parsed_output = hdevtools_check(file_shown_in_view)
         if parsed_output is None:
             raise ValueError, "hdevtools failed!"
+        log(parsed_output)
         set_global_error_messages(parsed_output)
         sublime.set_timeout(lambda: mark_messages_in_views(parsed_output), 0)
-        output_text = repr(parsed_output[0].message)
+        output_text = "\n".join([p.message for p in parsed_output])
         exit_code = 1 if parsed_output else 0
         show_output_result_text(view, '', output_text, exit_code, file_dir)
 
