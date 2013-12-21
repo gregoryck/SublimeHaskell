@@ -30,18 +30,26 @@ def show_hdevtools_error_and_disable():
 
     set_setting_async('enable_hdevtools', False)
 
-def hdevtools_binary():
+def hdevtools_binary_and_library_dir():
     # current_project_dir, current_project_name = get_cabal_project_dir_and_name_of_view(self.window.active_view())
     window, view, file_shown_in_view = get_haskell_command_window_view_file_project()
     sandbox_path = find_file_in_parent_dir(os.path.dirname(file_shown_in_view), '.cabal-sandbox', filter=os.path.isdir)
 
     if (sandbox_path is not None):
-        putative_binary = os.path.join(sandbox_path, 'bin/hdevtools') 
+        putative_binary = os.path.join(sandbox_path, 'bin/hdevtools')
+        librarydirs = fnmatch.filter(os.listdir(sandbox_path), "*-packages.conf.d")
+        if len(librarydirs) == 0:
+            librarydir = None
+        elif len(librarydirs) == 1:
+            librarydir = librarydirs[0]
+        else:
+            log("Curious. More than one library dir in %s" % (sandbox_path,))
+            librarydir = librarydirs[0]
         if os.path.exists(putative_binary):
             # log("using " + putative_binary)
-            return putative_binary
+            return putative_binary, librarydir
 
-    return 'hdevtools'
+    return 'hdevtools', librarydir
 
 def call_hdevtools_and_wait(arg_list, filename = None, cabal = None):
     """
@@ -58,9 +66,15 @@ def call_hdevtools_and_wait(arg_list, filename = None, cabal = None):
 
     if hdevtools_socket:
         arg_list.append('--socket={0}'.format(hdevtools_socket))
+    hdevtools_binary, librarydir = hdevtools_binary_and_library_dir()
+    if librarydir is not None:
+        arg_list.append('-g -package-db={0}'.format(librarydir))
 
+    log(hdevtools_binary)
+    log(arg_list)
+    log(ghc_opts_args)
     try:
-        exit_code, out, err = call_and_wait([hdevtools_binary()] + arg_list + ghc_opts_args, cwd = source_dir)
+        exit_code, out, err = call_and_wait([hdevtools_binary] + arg_list + ghc_opts_args, cwd = source_dir)
 
         if err:
             raise Exception("hdevtools exited with status %d and stderr: %s" % (exit_code, err))
@@ -86,7 +100,7 @@ def admin(cmds, wait = False, **popen_kwargs):
     if hdevtools_socket:
         cmds.append('--socket={0}'.format(hdevtools_socket))
 
-    command = [hdevtools_binary(), "admin"] + cmds
+    command = [hdevtools_binary_and_library_dir()[0], "admin"] + cmds
 
     try:
         if wait:

@@ -78,7 +78,7 @@
 	"auto_completion_popup": false,
 
 	// Additional ghc options for use in ghc-mod and ModuleInspector, for example "-package ghc"
-	"ghc_opts": ["-package-db=.cabal-sandbox/x86_64-linux-ghc-7.6.3-packages.conf.d"],
+	"ghc_opts": [],
 
 	// hdevtools socket name or default
 	"hdevtools_socket": "",
