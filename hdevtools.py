@@ -38,15 +38,16 @@ def hdevtools_binary_and_library_dir():
     if (sandbox_path is not None):
         putative_binary = os.path.join(sandbox_path, 'bin/hdevtools')
         librarydirs = fnmatch.filter(os.listdir(sandbox_path), "*-packages.conf.d")
+        log("librarydirs " + str(librarydirs))
         if len(librarydirs) == 0:
             librarydir = None
         elif len(librarydirs) == 1:
-            librarydir = librarydirs[0]
+            librarydir = os.path.join(sandbox_path, librarydirs[0])
         else:
             log("Curious. More than one library dir in %s" % (sandbox_path,))
-            librarydir = librarydirs[0]
+            librarydir = os.path.join(sandbox_path, librarydirs[0])
         if os.path.exists(putative_binary):
-            # log("using " + putative_binary)
+            log("using " + putative_binary)
             return putative_binary, librarydir
 
     return 'hdevtools', librarydir
@@ -68,12 +69,14 @@ def call_hdevtools_and_wait(arg_list, filename = None, cabal = None):
         arg_list.append('--socket={0}'.format(hdevtools_socket))
     hdevtools_binary, librarydir = hdevtools_binary_and_library_dir()
     if librarydir is not None:
-        arg_list.append('-g -package-db={0}'.format(librarydir))
+        arg_list.append('-g')
+        arg_list.append('-package-db={0}'.format(librarydir))
 
     log(hdevtools_binary)
     log(arg_list)
     log(ghc_opts_args)
     try:
+        log([hdevtools_binary] + arg_list + ghc_opts_args)
         exit_code, out, err = call_and_wait([hdevtools_binary] + arg_list + ghc_opts_args, cwd = source_dir)
 
         if err:
